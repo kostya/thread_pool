@@ -14,4 +14,12 @@ describe ThreadPool do
       c.result.should eq "389bd6fe043b183b22438d4ff64e3230"
     end
   end
+
+  it "stats" do
+    pool = ThreadPool.new(1)
+    pool.run
+    sleep 0.2
+    pool.stats.should eq({requests_size: 0, results_size: 0, threads: 1})
+    pool.stop
+  end
 end

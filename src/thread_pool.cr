@@ -25,6 +25,10 @@ class ThreadPool
     @runner.try &.stop
   end
 
+  def stats
+    @runner.stats
+  end
+
   private def run_mapper
     spawn do
       loop do

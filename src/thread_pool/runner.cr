@@ -33,6 +33,14 @@ class ThreadPool
       end
     end
 
+    def stats
+      {
+        requests_size: @requests.size,
+        results_size:  @results.size,
+        threads:       @threads.size,
+      }
+    end
+
     private def receive_request
       @mutex_requests.synchronize do
         @requests.shift?
