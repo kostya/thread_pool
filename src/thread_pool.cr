@@ -1,7 +1,7 @@
 require "./thread_pool/*"
 
 class ThreadPool
-  VERSION = "0.1"
+  VERSION = "0.2"
 
   def initialize(size : Int32, wait_task_mks = 10000, @receive_task_mks = 50000)
     @runner = Runner.new(size, wait_task_mks)
