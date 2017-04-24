@@ -1,6 +1,6 @@
 # thread_pool
 
-Simple Thread pool for Crystal. Only for calculate cpu heavy tasks in background threads. Not allowed to use any io operations (like: sockets, files, prints). THIS IS EXPIREMENTAL, may have bugs.
+Simple Thread pool for Crystal. Only for calculate cpu heavy (or cpu blocked, like: libcurl) tasks in background threads. Not allowed to use any io operations (like: sockets, files, prints). THIS IS EXPIREMENTAL, may have bugs.
 
 ## Installation
 
