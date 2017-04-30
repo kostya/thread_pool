@@ -7,6 +7,14 @@ describe ThreadPool do
     c.result.should eq "389bd6fe043b183b22438d4ff64e3230"
   end
 
+  it "single execute" do
+    task = SpecTask.new("bla")
+    with_thread_pool(1) do |pool|
+      pool.execute(task)
+      task.result.should eq "128ecf542a35ac5270a87dc740918404"
+    end
+  end
+
   (1..10).each do |i|
     it "threaded #{i}" do
       c = CalculateMD5.new(1000, i)

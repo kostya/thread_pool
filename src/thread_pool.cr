@@ -1,7 +1,7 @@
 require "./thread_pool/*"
 
 class ThreadPool
-  VERSION = "0.2"
+  VERSION = "0.3"
 
   def initialize(size : Int32, wait_task_mks = 10000, @receive_task_mks = 50000)
     @runner = Runner.new(size, wait_task_mks)
@@ -11,6 +11,11 @@ class ThreadPool
   def push(task : Task)
     task.result_channel # just instantinate it
     @runner.push_task(task)
+    task
+  end
+
+  def execute(task : Task)
+    push(task).wait
   end
 
   def run
