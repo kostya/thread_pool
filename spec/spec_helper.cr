@@ -34,6 +34,14 @@ def should_spend(timeout, delta = timeout / 5.0)
   res
 end
 
+POOLS = {} of Int32 => ThreadPool
+
+(1..10).each do |cnt|
+  pool = ThreadPool.new(size: cnt)
+  pool.run
+  POOLS[cnt] = pool
+end
+
 class CalculateMD5
   @finished_at : Time?
 

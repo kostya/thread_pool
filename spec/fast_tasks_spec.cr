@@ -16,8 +16,8 @@ end
 describe "test real parallel execution" do
   (1..10).each do |i|
     it "threaded #{i}" do
-      tasks = Array.new(10000) { FastTask.new(1.0) }
-      should_spend(0.0) do
+      tasks = Array.new(1000) { FastTask.new(1.0) }
+      should_spend(0.0, 0.5) do
         with_thread_pool(i) do |pool|
           tasks.each { |task| pool << task }
           tasks.each { |task| task.wait }

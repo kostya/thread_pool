@@ -19,36 +19,26 @@ describe "test real parallel execution" do
   it "single" do
     should_spend(1.0, 0.5) do
       task = SleepTask.new(1.0)
-      with_thread_pool(1) do |pool|
-        pool.execute(task)
-        task.result.should eq 1.0
-      end
+      POOLS[1].execute(task)
+      task.result.should eq 1.0
     end
   end
 
   it "4 threads" do
     should_spend(1.0, 0.5) do
       tasks = Array.new(4) { SleepTask.new(1.0) }
-
-      with_thread_pool(4) do |pool|
-        tasks.each { |task| pool << task }
-        tasks.each { |task| task.wait }
-
-        tasks.each { |task| task.result.should eq 1.0 }
-      end
+      tasks.each { |task| POOLS[4] << task }
+      tasks.each { |task| task.wait }
+      tasks.each { |task| task.result.should eq 1.0 }
     end
   end
 
   it "8 tasks, 4 threads" do
     should_spend(2.0, 0.5) do
       tasks = Array.new(8) { SleepTask.new(1.0) }
-
-      with_thread_pool(4) do |pool|
-        tasks.each { |task| pool << task }
-        tasks.each { |task| task.wait }
-
-        tasks.each { |task| task.result.should eq 1.0 }
-      end
+      tasks.each { |task| POOLS[4] << task }
+      tasks.each { |task| task.wait }
+      tasks.each { |task| task.result.should eq 1.0 }
     end
   end
 
@@ -56,12 +46,9 @@ describe "test real parallel execution" do
     should_spend(1.0, 0.5) do
       tasks = Array.new(10) { SleepTask.new(1.0) }
 
-      with_thread_pool(10) do |pool|
-        tasks.each { |task| pool << task }
-        tasks.each { |task| task.wait }
-
-        tasks.each { |task| task.result.should eq 1.0 }
-      end
+      tasks.each { |task| POOLS[10] << task }
+      tasks.each { |task| task.wait }
+      tasks.each { |task| task.result.should eq 1.0 }
     end
   end
 end
