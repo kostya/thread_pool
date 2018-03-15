@@ -47,6 +47,19 @@ describe "test real parallel execution" do
     end
   end
 
+  it "8 tasks, 4 threads" do
+    should_spend(2.0, 0.5) do
+      tasks = Array.new(8) { SleepTask.new(1.0) }
+
+      with_thread_pool(4) do |pool|
+        tasks.each { |task| pool << task }
+        tasks.each { |task| task.wait }
+
+        tasks.each { |task| task.result.should eq 1.0 }
+      end
+    end
+  end
+
   it "10 threads" do
     should_spend(1.0, 0.5) do
       tasks = Array.new(10) { SleepTask.new(1.0) }
