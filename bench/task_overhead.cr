@@ -15,7 +15,7 @@ class Task
 end
 
 # run 4 background threads
-pool = ThreadPool.new(size: 4, debug: true).run
+pool = ThreadPool.new(size: 4).run
 
 task = Task.new "bla"
 

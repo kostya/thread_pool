@@ -21,7 +21,7 @@ tasks = Array.new(10000) { |i| Task.new(i, i + 1) }
 t = Time.now
 s = 0_u64
 
-tasks.each { |t| pool << t }
+tasks.each { |t| pool.push t }
 tasks.each { |t| t.wait }
 tasks.each { |t| s += t.result.not_nil! }
 

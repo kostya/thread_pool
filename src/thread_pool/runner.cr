@@ -101,10 +101,10 @@ class ThreadPool
 
     private def add_thread(id)
       # send flag to thread about new task
-      r1, w1 = IO.pipe(read_blocking: true, write_blocking: true)
+      r1, w1 = IO.pipe(read_blocking: true, write_blocking: false)
 
       # send flag from thread about result ready
-      r2, w2 = IO.pipe(read_blocking: true, write_blocking: false)
+      r2, w2 = IO.pipe(read_blocking: false, write_blocking: true)
 
       th = Thread.new { thread_main(id, r1, w2) }
       ThreadInfo.new(thread: th, id: id, r1: r1, r2: r2, w1: w1, w2: w2)
