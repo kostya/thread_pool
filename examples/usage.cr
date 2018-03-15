@@ -21,7 +21,7 @@ class Task
 end
 
 # run 4 background threads
-pool = ThreadPool.new(size: 4).run
+pool = ThreadPool.new(size: 4, debug: true).run
 
 # create 10 tasks
 tasks = Array(Task).new(10) { |i| Task.new(i.to_s) }

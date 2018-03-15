@@ -3,8 +3,8 @@ require "./thread_pool/*"
 class ThreadPool
   VERSION = "0.3"
 
-  def initialize(@size : Int32)
-    @runner = Runner.new(@size)
+  def initialize(@size : Int32, @debug = false)
+    @runner = Runner.new(@size, @debug)
     @stopped = false
   end
 
@@ -46,7 +46,10 @@ class ThreadPool
     @runner.threads.each do |ti|
       spawn do
         loop do
-          ti.read_results.read_byte
+          begin
+            ti.r2.read_byte
+          rescue Errno
+          end
           break if @stopped
           res = @runner.receive_task
           if res
