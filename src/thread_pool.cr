@@ -3,8 +3,8 @@ require "./thread_pool/*"
 class ThreadPool
   VERSION = "0.3"
 
-  def initialize(size : Int32, wait_task_mks = 10000, @receive_task_mks = 50000)
-    @runner = Runner.new(size, wait_task_mks)
+  def initialize(@size : Int32)
+    @runner = Runner.new(@size)
     @stopped = false
   end
 
@@ -14,6 +14,10 @@ class ThreadPool
     task
   end
 
+  def <<(task : Task)
+    push(task)
+  end
+
   def execute(task : Task)
     push(task).wait
   end
@@ -21,6 +25,10 @@ class ThreadPool
   def run
     @stopped = false
     @runner.run
+    loop do
+      sleep 0.1
+      break if @runner.threads.size == @size
+    end
     run_mapper
     self
   end
@@ -35,18 +43,17 @@ class ThreadPool
   end
 
   private def run_mapper
-    spawn do
-      loop do
-        interval = @receive_task_mks / 1_000_000.0
+    @runner.threads.each do |ti|
+      spawn do
         loop do
+          ti.read_results.read_byte
+          break if @stopped
           res = @runner.receive_task
           if res
             begin
               res.result_channel.send(nil)
             rescue Channel::ClosedError
             end
-          else
-            sleep(interval)
           end
           break if @stopped
         end

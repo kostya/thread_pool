@@ -27,10 +27,13 @@ pool = ThreadPool.new(size: 4).run
 tasks = Array(Task).new(10) { |i| Task.new(i.to_s) }
 
 # send tasks to background threads, to calculate it in parallel, not blocked
-tasks.each { |task| pool.push(task) }
+tasks.each { |task| pool << task }
 
-# wait until all tasks done (not io blocked)
+# wait until all tasks done (blocked, concurrency not blocked)
 tasks.each { |task| task.wait }
 
 # output tasks results
 tasks.each { |task| p task.result }
+
+# stop pool
+pool.stop

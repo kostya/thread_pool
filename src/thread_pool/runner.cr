@@ -1,12 +1,16 @@
 class ThreadPool
   class Runner
-    def initialize(@size : Int32, @wait_task_mks = 10000)
+    getter threads
+
+    record ThreadInfo, thread : Thread, read_results : IO::FileDescriptor, write_flag : IO::FileDescriptor
+
+    def initialize(@size : Int32)
       @mutex_requests = Thread::Mutex.new
       @mutex_results = Thread::Mutex.new
 
       @requests = Deque(Task).new
       @results = Deque(Task).new
-      @threads = [] of Thread
+      @threads = Array(ThreadInfo).new
       @stopped = false
     end
 
@@ -21,6 +25,10 @@ class ThreadPool
     end
 
     def push_task(task : Task)
+      # set notifications for threads to wake up
+      @threads.each { |th| th.write_flag.write_byte(1_u8) }
+
+      # add task
       @mutex_requests.synchronize do
         @requests << task
         true
@@ -61,16 +69,30 @@ class ThreadPool
     end
 
     private def add_thread
-      Thread.new do
-        loop do
-          if req = receive_request
-            req.execute
-            push_results(req)
-          else
-            LibC.usleep(@wait_task_mks)
-          end
-          break if @stopped
-        end
+      # send flag to thread about new task
+      r1, w1 = IO.pipe(read_blocking: true, write_blocking: false)
+
+      # send flag from thread about result ready
+      r2, w2 = IO.pipe(write_blocking: false)
+
+      th = Thread.new { thread_main(r1, w2) }
+      ThreadInfo.new(th, r2, w1)
+    end
+
+    private def thread_main(r1, w2)
+      loop do
+        r1.read_byte
+        break if @stopped
+        thread_execute_task(w2)
+        break if @stopped
+      end
+    end
+
+    private def thread_execute_task(w2)
+      if req = receive_request
+        req.execute
+        push_results(req)
+        w2.write_byte(1_u8)
       end
     end
   end
