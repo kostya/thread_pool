@@ -9,10 +9,8 @@ describe ThreadPool do
 
   it "single execute" do
     task = SpecTask.new("bla")
-    with_thread_pool(1) do |pool|
-      pool.execute(task)
-      task.result.should eq "128ecf542a35ac5270a87dc740918404"
-    end
+    POOLS[1].execute(task)
+    task.result.should eq "128ecf542a35ac5270a87dc740918404"
   end
 
   (1..10).each do |i|

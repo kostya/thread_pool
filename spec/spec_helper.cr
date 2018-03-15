@@ -15,16 +15,16 @@ class SpecTask
   end
 end
 
-def with_thread_pool(size)
-  pool = ThreadPool.new(size: size)
-  pool.run
-  sleep 0.1
+# def with_thread_pool(size)
+#   pool = ThreadPool.new(size: size)
+#   pool.run
+#   sleep 0.1
 
-  yield pool
-ensure
-  pool.try &.stop
-  sleep 0.1
-end
+#   yield pool
+# ensure
+#   pool.try &.stop
+#   sleep 0.1
+# end
 
 def should_spend(timeout, delta = timeout / 5.0)
   t = Time.now
@@ -41,6 +41,8 @@ POOLS = {} of Int32 => ThreadPool
   pool.run
   POOLS[cnt] = pool
 end
+
+sleep 1.0
 
 class CalculateMD5
   @finished_at : Time?
@@ -61,10 +63,8 @@ class CalculateMD5
   end
 
   def calc_in_threads
-    with_thread_pool(@threads_count) do |pool|
-      @tasks.each { |task| pool.push(task) }
-      @tasks.each { |task| task.wait }
-    end
+    @tasks.each { |task| POOLS[@threads_count].push(task) }
+    @tasks.each { |task| task.wait }
 
     self
   end
