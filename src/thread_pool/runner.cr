@@ -16,7 +16,7 @@ class ThreadPool
     end
 
     def initialize(@size : Int32, @debug = false)
-      @tasks_channel = Channel(UInt64).new(100)
+      @tasks_channel = Channel(UInt64).new
 
       @mutex_requests = Thread::Mutex.new
       @mutex_results = Thread::Mutex.new
@@ -104,7 +104,7 @@ class ThreadPool
       r1, w1 = IO.pipe(read_blocking: true, write_blocking: true)
 
       # send flag from thread about result ready
-      r2, w2 = IO.pipe(read_blocking: false, write_blocking: false)
+      r2, w2 = IO.pipe(read_blocking: true, write_blocking: false)
 
       th = Thread.new { thread_main(id, r1, w2) }
       ThreadInfo.new(thread: th, id: id, r1: r1, r2: r2, w1: w1, w2: w2)
