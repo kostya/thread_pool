@@ -11,11 +11,13 @@ class ThreadPool
     record ThreadInfo, thread : Thread, id : Int32, r1 : IO::FileDescriptor, r2 : IO::FileDescriptor, w1 : IO::FileDescriptor, w2 : IO::FileDescriptor
 
     def initialize(@size : Int32, @debug = false)
+      @tasks_channel = Channel::Buffered(UInt64).new(100)
+
       @mutex_requests = Thread::Mutex.new
       @mutex_results = Thread::Mutex.new
 
-      @requests = Deque(Task).new
-      @results = Deque(Task).new
+      @requests = {} of UInt64 => Task
+      @results = {} of UInt64 => Task
       @threads = Array(ThreadInfo).new
       @stopped = false
     end
@@ -33,17 +35,19 @@ class ThreadPool
         ti.w1.close
       end
       @threads.clear
+      @tasks_channel.close
     end
 
     def push_task(task : Task)
-      # set notifications for threads to wake up
-      @threads.each { |th| th.w1.write_byte(1_u8) }
+      id = task.thread_pool_id
 
-      # add task
       @mutex_requests.synchronize do
-        @requests << task
-        true
+        @requests[id] = task
       end
+
+      @tasks_channel.send(task.thread_pool_id)
+
+      true
     end
 
     def receive_task
@@ -74,7 +78,15 @@ class ThreadPool
 
     private def _run
       @size.times do |i|
-        @threads << add_thread(i)
+        ti = add_thread(i)
+        @threads << ti
+        spawn do
+          loop do
+            task = @tasks_channel.receive
+            ti.w1.write_bytes(task.thread_pool_id, IO::ByteFormat::LittleEndian)
+            break if @stopped
+          end
+        end
         sleep 0.01 # this is quite needed, dont know why, but else it crashed
       end
     end

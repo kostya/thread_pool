@@ -3,6 +3,14 @@ require "./thread_pool/*"
 class ThreadPool
   VERSION = "0.3"
 
+  @@original_id : UInt64 = 0_u64
+
+  def self.next_id
+    @@original_id += 1
+    @@original_id = 0_u64 if @@original_id == UInt64::MAX
+    @@original_id
+  end
+
   def initialize(@size : Int32, @debug = false)
     @runner = Runner.new(@size, @debug)
     @stopped = false
