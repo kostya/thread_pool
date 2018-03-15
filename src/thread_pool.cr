@@ -55,15 +55,17 @@ class ThreadPool
       spawn do
         loop do
           begin
-            ti.r2.read_byte
+            task_id = ti.r2.read_bytes(UInt64, IO::ByteFormat::LittleEndian)
           rescue Errno
           end
           break if @stopped
-          res = @runner.receive_task
-          if res
-            begin
-              res.result_channel.send(nil)
-            rescue Channel::ClosedError
+          if task_id
+            res = @runner.result_by_id(task_id) 
+            if res
+              begin
+                res.result_channel.send(nil)
+              rescue Channel::ClosedError
+              end
             end
           end
           break if @stopped

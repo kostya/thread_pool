@@ -37,7 +37,7 @@ end
 POOLS = {} of Int32 => ThreadPool
 
 (1..10).each do |cnt|
-  pool = ThreadPool.new(size: cnt)
+  pool = ThreadPool.new(size: cnt, debug: true)
   pool.run
   POOLS[cnt] = pool
 end

@@ -8,10 +8,14 @@ class ThreadPool
   class Runner
     getter threads
 
-    record ThreadInfo, thread : Thread, id : Int32, r1 : IO::FileDescriptor, r2 : IO::FileDescriptor, w1 : IO::FileDescriptor, w2 : IO::FileDescriptor
+    class ThreadInfo
+      getter thread, id, r1, r2, w1, w2
+      def initialize(@thread : Thread, @id : Int32, @r1 : IO::FileDescriptor, @r2 : IO::FileDescriptor, @w1 : IO::FileDescriptor, @w2 : IO::FileDescriptor)
+      end
+    end
 
     def initialize(@size : Int32, @debug = false)
-      @tasks_channel = Channel::Buffered(UInt64).new(100)
+      @tasks_channel = Channel(UInt64).new(100)
 
       @mutex_requests = Thread::Mutex.new
       @mutex_results = Thread::Mutex.new
@@ -50,9 +54,9 @@ class ThreadPool
       true
     end
 
-    def receive_task
+    def result_by_id(task_id)
       @mutex_results.synchronize do
-        @results.shift?
+        @results.delete(task_id)
       end
     end
 
@@ -64,15 +68,15 @@ class ThreadPool
       }
     end
 
-    private def receive_request
+    private def request_by_id(task_id)
       @mutex_requests.synchronize do
-        @requests.shift?
+        @requests.delete(task_id)
       end
     end
 
-    private def push_results(res)
+    private def push_result(task_id, task)
       @mutex_results.synchronize do
-        @results << res
+        @results[task_id] = task
       end
     end
 
@@ -82,8 +86,10 @@ class ThreadPool
         @threads << ti
         spawn do
           loop do
-            task = @tasks_channel.receive
-            ti.w1.write_bytes(task.thread_pool_id, IO::ByteFormat::LittleEndian)
+            id = @tasks_channel.receive
+            p i
+            p id
+            ti.w1.write_bytes(id, IO::ByteFormat::LittleEndian)
             break if @stopped
           end
         end
@@ -96,30 +102,30 @@ class ThreadPool
       r1, w1 = IO.pipe(read_blocking: true, write_blocking: false)
 
       # send flag from thread about result ready
-      r2, w2 = IO.pipe(write_blocking: false)
+      r2, w2 = IO.pipe
 
       th = Thread.new { thread_main(id, r1, w2) }
       ThreadInfo.new(thread: th, id: id, r1: r1, r2: r2, w1: w1, w2: w2)
     end
 
-    private def thread_main(id, r1, w2)
+    private def thread_main(thread_id, r1, w2)
       loop do
         begin
-          r1.read_byte
+          task_id = r1.read_bytes(UInt64, IO::ByteFormat::LittleEndian)
         rescue Errno
         end
         break if @stopped
-        thread_execute_task(id, w2)
+        thread_execute_task(thread_id, task_id, w2) if task_id
         break if @stopped
       end
     end
 
-    private def thread_execute_task(id, w2)
-      if req = receive_request
-        debug_msg { "thread<#{id}> get task #{req.inspect}" }
+    private def thread_execute_task(thread_id, task_id, w2)
+      if req = request_by_id(task_id)
+        debug_msg { "thread<#{thread_id}> get task #{req.inspect}" }
         req.execute
-        push_results(req)
-        w2.write_byte(1_u8)
+        push_result(task_id, req)
+        w2.write_bytes(task_id, IO::ByteFormat::LittleEndian)
       end
     end
 
