@@ -10,6 +10,7 @@ class ThreadPool
 
     class ThreadInfo
       getter thread, id, r1, r2, w1, w2
+
       def initialize(@thread : Thread, @id : Int32, @r1 : IO::FileDescriptor, @r2 : IO::FileDescriptor, @w1 : IO::FileDescriptor, @w2 : IO::FileDescriptor)
       end
     end
@@ -81,28 +82,29 @@ class ThreadPool
     end
 
     private def _run
+      spawn do
+        loop do
+          id = @tasks_channel.receive
+          @threads.each do |ti|
+            ti.w1.write_bytes(id, IO::ByteFormat::LittleEndian)
+          end
+          break if @stopped
+        end
+      end
+
       @size.times do |i|
         ti = add_thread(i)
         @threads << ti
-        spawn do
-          loop do
-            id = @tasks_channel.receive
-            p i
-            p id
-            ti.w1.write_bytes(id, IO::ByteFormat::LittleEndian)
-            break if @stopped
-          end
-        end
         sleep 0.01 # this is quite needed, dont know why, but else it crashed
       end
     end
 
     private def add_thread(id)
       # send flag to thread about new task
-      r1, w1 = IO.pipe(read_blocking: true, write_blocking: false)
+      r1, w1 = IO.pipe(read_blocking: true, write_blocking: true)
 
       # send flag from thread about result ready
-      r2, w2 = IO.pipe
+      r2, w2 = IO.pipe(read_blocking: false, write_blocking: false)
 
       th = Thread.new { thread_main(id, r1, w2) }
       ThreadInfo.new(thread: th, id: id, r1: r1, r2: r2, w1: w1, w2: w2)

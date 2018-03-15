@@ -60,7 +60,7 @@ class ThreadPool
           end
           break if @stopped
           if task_id
-            res = @runner.result_by_id(task_id) 
+            res = @runner.result_by_id(task_id)
             if res
               begin
                 res.result_channel.send(nil)
