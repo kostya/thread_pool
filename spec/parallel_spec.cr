@@ -15,14 +15,6 @@ class SleepTask
   end
 end
 
-def should_spend(timeout, delta = timeout / 5.0)
-  t = Time.now
-  res = yield
-  delta = 0.02 if delta < 0.02
-  (Time.now - t).to_f.should be_close(timeout, delta)
-  res
-end
-
 describe "test real parallel execution" do
   it "single" do
     should_spend(1.0, 0.5) do
