@@ -42,11 +42,11 @@ describe "test real parallel execution" do
     end
   end
 
-  it "10 threads" do
+  it "MAX_POOL_SIZE threads" do
     should_spend(1.0, 0.5) do
-      tasks = Array.new(10) { SleepTask.new(1.0) }
+      tasks = Array.new(MAX_POOL_SIZE) { SleepTask.new(1.0) }
 
-      tasks.each { |task| POOLS[10] << task }
+      tasks.each { |task| POOLS[MAX_POOL_SIZE] << task }
       tasks.each { |task| task.wait }
       tasks.each { |task| task.result.should eq 1.0 }
     end

@@ -13,7 +13,7 @@ describe ThreadPool do
     task.result.should eq "128ecf542a35ac5270a87dc740918404"
   end
 
-  (1..10).each do |i|
+  (1..MAX_POOL_SIZE).each do |i|
     it "threaded #{i}" do
       c = CalculateMD5.new(1000, i)
       c.calc_in_threads
@@ -22,10 +22,6 @@ describe ThreadPool do
   end
 
   it "stats" do
-    pool = ThreadPool.new(1)
-    pool.run
-    sleep 0.2
-    pool.stats.should eq({requests_size: 0, results_size: 0, threads: 1})
-    pool.stop
+    POOLS[1].stats.should eq({requests_size: 0, results_size: 0, threads: 1})
   end
 end

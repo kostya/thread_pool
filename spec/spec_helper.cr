@@ -15,17 +15,6 @@ class SpecTask
   end
 end
 
-# def with_thread_pool(size)
-#   pool = ThreadPool.new(size: size)
-#   pool.run
-#   sleep 0.1
-
-#   yield pool
-# ensure
-#   pool.try &.stop
-#   sleep 0.1
-# end
-
 def should_spend(timeout, delta = timeout / 5.0)
   t = Time.now
   res = yield
@@ -36,7 +25,9 @@ end
 
 POOLS = {} of Int32 => ThreadPool
 
-(1..10).each do |cnt|
+MAX_POOL_SIZE = 10
+
+(1..MAX_POOL_SIZE).each do |cnt|
   pool = ThreadPool.new(size: cnt)
   pool.run
   POOLS[cnt] = pool

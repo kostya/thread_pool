@@ -124,7 +124,7 @@ class ThreadPool
 
     private def thread_execute_task(thread_id, task_id, w2)
       if req = request_by_id(task_id)
-        debug_msg { "thread<#{thread_id}> get task #{req.inspect}" }
+        debug_msg { "thread<#{thread_id}> get task #{req.inspect}\n" }
         req.execute
         push_result(task_id, req)
         w2.write_bytes(task_id, IO::ByteFormat::LittleEndian)
@@ -133,7 +133,7 @@ class ThreadPool
 
     private def debug_msg
       {% unless flag?(:release) %}
-      puts yield if @debug
+      LibC.printf(yield) if @debug
       {% end %}
     end
   end

@@ -36,4 +36,4 @@ tasks.each { |task| task.wait }
 tasks.each { |task| p task.result }
 
 # stop pool
-pool.stop
+# pool.stop

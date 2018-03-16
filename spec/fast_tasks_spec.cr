@@ -14,7 +14,7 @@ class FastTask
 end
 
 describe "test real parallel execution" do
-  (1..10).each do |i|
+  (1..MAX_POOL_SIZE).each do |i|
     it "threaded #{i}" do
       tasks = Array.new(1000) { FastTask.new(1.0) }
       should_spend(0.0, 0.5) do
